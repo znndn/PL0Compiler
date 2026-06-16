@@ -1,0 +1,14 @@
+=== COMPILE PL0 ===
+  0 PROGRAM T_NEQ1; 
+***          ^5
+***          ^7
+***              ^11
+***               ^13
+***               ^24
+***               ^8
+  3 VAR A; 
+  0 JMP 0 1
+  1 INI 0 3
+  2 OPR 0 0
+***   ^9
+ERROR IN PL/0 PROGRAM

@@ -1,0 +1,7 @@
+PROGRAM TNEQ1;
+VAR A;
+BEGIN
+  A := 3;
+  IF A <> 4 THEN
+    WRITE(A)
+END.

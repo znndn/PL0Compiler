@@ -1,0 +1,19 @@
+PROGRAM E02;
+VAR A, B;
+BEGIN
+    READ(A);
+    READ(B);
+    
+    IF A != B THEN
+    BEGIN
+        FOR A := 1 STEP 1 UNTIL 10 DO
+        BEGIN
+            A += 1;
+            A *= 2;
+        END;
+    END
+    ELSE
+    BEGIN
+        WRITE(B);
+    END;
+END.
