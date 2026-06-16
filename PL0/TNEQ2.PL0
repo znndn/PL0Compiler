@@ -1,7 +1,0 @@
-PROGRAM TNEQ2;
-VAR A;
-BEGIN
-  A := 3;
-  IF A != 4 THEN
-    WRITE(A)
-END.

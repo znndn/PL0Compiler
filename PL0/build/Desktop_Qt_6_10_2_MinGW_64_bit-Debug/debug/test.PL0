@@ -1,9 +1,0 @@
-var a, b, c;
-begin
-    a := 5;
-    b := ++a;   
-    c := a++; 
-    write(a);   
-    write(b);  
-    write(c);  
-end.

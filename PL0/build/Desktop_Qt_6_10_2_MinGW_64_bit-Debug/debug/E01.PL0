@@ -1,0 +1,13 @@
+PROGRAM E01;
+VAR A;
+BEGIN
+    A := 5;
+    IF A > 3 THEN
+        WRITE(1)
+    ELSE
+        WRITE(0);
+    IF A < 3 THEN
+        WRITE(2)
+    ELSE
+        WRITE(3)
+END.
