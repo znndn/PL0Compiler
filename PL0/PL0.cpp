@@ -483,7 +483,20 @@ void MainWindow::STATEMENT(SYMSET FSYS,int LEV,int &TX) {   /*STATEMENT*/
             }
         GetSym();
 
-        if (SYM == BECOMES || SYM == TIMESEQL || SYM == SLASHEQL) {
+        // 后置 ++、-- 作为独立语句时只更新变量，不保留表达式结果
+        if (SYM == PLUSPLUS || SYM == MINUSMINUS) {
+            SYMBOL op = SYM;
+            GetSym();
+
+            if (i != 0) {
+                GEN(LOD, LEV - TABLE[i].vp.LEVEL, TABLE[i].vp.ADR);
+                GEN(LIT, 0, 1);
+                if (op == PLUSPLUS) GEN(OPR, 0, 2);
+                else GEN(OPR, 0, 3);
+                GEN(STO, LEV - TABLE[i].vp.LEVEL, TABLE[i].vp.ADR);
+            }
+        }
+        else if (SYM == BECOMES || SYM == TIMESEQL || SYM == SLASHEQL) {
 
             SYMBOL op = SYM;
             GetSym();
@@ -506,6 +519,30 @@ void MainWindow::STATEMENT(SYMSET FSYS,int LEV,int &TX) {   /*STATEMENT*/
             Error(13);
         }
         break;
+
+    case PLUSPLUS:
+    case MINUSMINUS: {
+        SYMBOL op = SYM;
+        GetSym();
+
+        if (SYM != IDENT) {
+            Error(14);
+            break;
+        }
+
+        i = POSITION(ID,TX);
+        if (i == 0) Error(11);
+        else if (TABLE[i].KIND != VARIABLE) Error(12);
+        else {
+            GEN(LOD, LEV - TABLE[i].vp.LEVEL, TABLE[i].vp.ADR);
+            GEN(LIT, 0, 1);
+            if (op == PLUSPLUS) GEN(OPR, 0, 2);
+            else GEN(OPR, 0, 3);
+            GEN(STO, LEV - TABLE[i].vp.LEVEL, TABLE[i].vp.ADR);
+        }
+        GetSym();
+        break;
+    }
     case READSYM:
         GetSym();
         if (SYM!=LPAREN) Error(34);
@@ -671,7 +708,7 @@ void MainWindow::STATEMENT(SYMSET FSYS,int LEV,int &TX) {   /*STATEMENT*/
 void MainWindow::Block(int LEV, int TX, SYMSET FSYS) {
     int DX=3;    /*DATA ALLOCATION INDEX*/
     int TX0=TX;  /*INITIAL TABLE INDEX*/
-    int CX0=CX;  /*INITIAL CODE INDEX*/
+    int CX0=CX;  /*CODE ALLOCATION INDEX*/
     TABLE[TX].vp.ADR=CX; GEN(JMP,0,0);
     if (LEV>LEVMAX) Error(32);
     do {
@@ -832,6 +869,8 @@ void MainWindow::runClicked(){
     STATBEGSYS[WHILESYM]=1;
     STATBEGSYS[WRITESYM]=1;
     STATBEGSYS[FORSYM]=1;  // 把 FOR 加入语句起始集合，防止语法报错无法恢复
+    STATBEGSYS[PLUSPLUS]=1;
+    STATBEGSYS[MINUSMINUS]=1;
     FACBEGSYS[IDENT] =1;
     FACBEGSYS[NUMBER]=1;
     FACBEGSYS[LPAREN]=1;

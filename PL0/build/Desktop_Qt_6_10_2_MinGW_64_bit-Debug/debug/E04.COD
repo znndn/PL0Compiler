@@ -6,14 +6,12 @@
   4     B := ++A; 
  10     WRITE(A, B); 
  15     A++; 
-***       ^13
-***       ^19
- 15     WRITE(A, B); 
- 20     B := --A; 
- 26     WRITE(A, B); 
- 31     B := A--; 
- 37     WRITE(A, B) 
- 41 END. 
+ 19     WRITE(A, B); 
+ 24     B := --A; 
+ 30     WRITE(A, B); 
+ 35     B := A--; 
+ 41     WRITE(A, B) 
+ 45 END. 
   0 JMP 0 1
   1 INI 0 5
   2 LIT 0 5
@@ -30,31 +28,45 @@
  13 OPR 0 14
  14 OPR 0 15
  15 LOD 0 3
- 16 OPR 0 14
- 17 LOD 0 4
- 18 OPR 0 14
- 19 OPR 0 15
- 20 LOD 0 3
- 21 LIT 0 1
- 22 OPR 0 3
- 23 STO 0 3
+ 16 LIT 0 1
+ 17 OPR 0 2
+ 18 STO 0 3
+ 19 LOD 0 3
+ 20 OPR 0 14
+ 21 LOD 0 4
+ 22 OPR 0 14
+ 23 OPR 0 15
  24 LOD 0 3
- 25 STO 0 4
- 26 LOD 0 3
- 27 OPR 0 14
- 28 LOD 0 4
- 29 OPR 0 14
- 30 OPR 0 15
- 31 LOD 0 3
- 32 LOD 0 3
- 33 LIT 0 1
- 34 OPR 0 3
- 35 STO 0 3
- 36 STO 0 4
- 37 LOD 0 3
- 38 OPR 0 14
- 39 LOD 0 4
- 40 OPR 0 14
- 41 OPR 0 15
- 42 OPR 0 0
-ERROR IN PL/0 PROGRAM
+ 25 LIT 0 1
+ 26 OPR 0 3
+ 27 STO 0 3
+ 28 LOD 0 3
+ 29 STO 0 4
+ 30 LOD 0 3
+ 31 OPR 0 14
+ 32 LOD 0 4
+ 33 OPR 0 14
+ 34 OPR 0 15
+ 35 LOD 0 3
+ 36 LOD 0 3
+ 37 LIT 0 1
+ 38 OPR 0 3
+ 39 STO 0 3
+ 40 STO 0 4
+ 41 LOD 0 3
+ 42 OPR 0 14
+ 43 LOD 0 4
+ 44 OPR 0 14
+ 45 OPR 0 15
+ 46 OPR 0 0
+~~~ RUN PL0 ~~~
+6
+6
+7
+6
+6
+6
+5
+6
+~~~ END PL0 ~~~
+
