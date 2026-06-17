@@ -1,0 +1,9 @@
+PROGRAM E02;
+VAR A;
+BEGIN
+    A := 12;
+    A *= 3;
+    WRITE(A);
+    A /= 4;
+    WRITE(A)
+END.

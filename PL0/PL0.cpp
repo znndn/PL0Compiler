@@ -356,29 +356,28 @@ void MainWindow::FACTOR(SYMSET FSYS, int LEV, int &TX) {
     TEST(FACBEGSYS,FSYS,24);
     while (SymIn(SYM,FACBEGSYS)) {
 
-        // 1. 处理前缀 ++ 和 -- (例如: ++a, --a)
         if (SYM == PLUSPLUS || SYM == MINUSMINUS) {
             SYMBOL op = SYM;
             GetSym();
             if (SYM == IDENT) {
                 i = POSITION(ID, TX);
-                if (i == 0) Error(11); // 变量未声明
-                else if (TABLE[i].KIND != VARIABLE) Error(12); // 非变量不能自增减
+                if (i == 0) Error(11);
+                else if (TABLE[i].KIND != VARIABLE) Error(12);
                 else {
-                    GEN(LOD, LEV - TABLE[i].vp.LEVEL, TABLE[i].vp.ADR); // 取出原值
-                    GEN(LIT, 0, 1);                                     // 准备数字 1
-                    if (op == PLUSPLUS) GEN(OPR, 0, 2);                 // 加 1
-                    else GEN(OPR, 0, 3);                                // 减 1
-                    GEN(STO, LEV - TABLE[i].vp.LEVEL, TABLE[i].vp.ADR); // 存回变量更新内存
+                    GEN(LOD, LEV - TABLE[i].vp.LEVEL, TABLE[i].vp.ADR);
+                    GEN(LIT, 0, 1);
+                    if (op == PLUSPLUS) GEN(OPR, 0, 2);
+                    else GEN(OPR, 0, 3);
+                    GEN(STO, LEV - TABLE[i].vp.LEVEL, TABLE[i].vp.ADR);
 
-                    GEN(LOD, LEV - TABLE[i].vp.LEVEL, TABLE[i].vp.ADR); // 再次取出新值，留在栈顶作为表达式结果
+                    GEN(LOD, LEV - TABLE[i].vp.LEVEL, TABLE[i].vp.ADR);
                 }
                 GetSym();
             } else {
-                Error(14); // ++ 后面期待跟一个标识符
+                Error(14);
             }
         }
-        // 2. 处理普通的标识符，以及后缀 ++ 和 -- (例如: a++, a--)
+
         else if (SYM == IDENT) {
             i = POSITION(ID, TX);
             if (i == 0) Error(11);
@@ -388,7 +387,7 @@ void MainWindow::FACTOR(SYMSET FSYS, int LEV, int &TX) {
                     GEN(LIT, 0, TABLE[i].VAL);
                     break;
                 case VARIABLE:
-                    GEN(LOD, LEV - TABLE[i].vp.LEVEL, TABLE[i].vp.ADR); // 取出值（如果是变量，此时原值已在栈顶）
+                    GEN(LOD, LEV - TABLE[i].vp.LEVEL, TABLE[i].vp.ADR);
                     break;
                 case PROCEDUR:
                     Error(21);
@@ -396,27 +395,24 @@ void MainWindow::FACTOR(SYMSET FSYS, int LEV, int &TX) {
                 }
             GetSym();
 
-            // 判断标识符之后是否紧接着后缀的 ++ 或 --
             if (i != 0 && TABLE[i].KIND == VARIABLE && (SYM == PLUSPLUS || SYM == MINUSMINUS)) {
-                // 注意：此时栈顶已经有了一个刚刚 LOD 进来的原值。
-                // 此时不对它做任何操作，把它压在栈底下作为最终表达式的值！
-                // 接着进行一次自增/自减的内存修改操作：
-                GEN(LOD, LEV - TABLE[i].vp.LEVEL, TABLE[i].vp.ADR); // 第二次取出值
-                GEN(LIT, 0, 1);                                     // 准备数字 1
-                if (SYM == PLUSPLUS) GEN(OPR, 0, 2);                // 相加
-                else GEN(OPR, 0, 3);                                // 相减
-                GEN(STO, LEV - TABLE[i].vp.LEVEL, TABLE[i].vp.ADR); // 存回内存，此时计算所用的数据退栈
+
+                GEN(LOD, LEV - TABLE[i].vp.LEVEL, TABLE[i].vp.ADR);
+                GEN(LIT, 0, 1);
+                if (SYM == PLUSPLUS) GEN(OPR, 0, 2);
+                else GEN(OPR, 0, 3);
+                GEN(STO, LEV - TABLE[i].vp.LEVEL, TABLE[i].vp.ADR);
 
                 GetSym(); // 读取下一个符号
             }
         }
-        // 3. 处理数字
+
         else if (SYM == NUMBER) {
             if (NUM > AMAX) { Error(31); NUM = 0; }
             GEN(LIT, 0, NUM);
             GetSym();
         }
-        // 4. 处理括号表达式
+
         else if (SYM == LPAREN) {
             GetSym();
             EXPRESSION(SymSetAdd(RPAREN, FSYS), LEV, TX);
@@ -479,40 +475,35 @@ void MainWindow::STATEMENT(SYMSET FSYS,int LEV,int &TX) {   /*STATEMENT*/
     int i,CX1,CX2,CX3;
     switch (SYM) {
     case IDENT:
-        i=POSITION(ID,TX);
+        i=POSITION(ID,TX); //符号表
         if (i==0) Error(11);
         else
-            if (TABLE[i].KIND!=VARIABLE) { /*ASSIGNMENT TO NON-VARIABLE*/
+            if (TABLE[i].KIND!=VARIABLE) {
                 Error(12); i=0;
             }
         GetSym();
 
-        // 判断是否是合法的赋值运算符 (:=, *=, /=)
         if (SYM == BECOMES || SYM == TIMESEQL || SYM == SLASHEQL) {
 
-            SYMBOL op = SYM; // 记录下具体是哪种赋值运算符
-            GetSym();        // 读取下一个单词
+            SYMBOL op = SYM;
+            GetSym();
 
-            // 如果是复合赋值(+=, -=, *=, /=)，需要先将变量原本的值压入栈顶 (LOD)
+            // 复合赋值处理变量原本的值
             if (op != BECOMES && i != 0) {
                 GEN(LOD, LEV - TABLE[i].vp.LEVEL, TABLE[i].vp.ADR);
             }
 
-            // 解析等号右侧的表达式 (表达式的值会自动计算并压入栈顶)
             EXPRESSION(FSYS, LEV, TX);
 
-            // 目标代码生成
             if (i != 0) {
-                // 如果是复合赋值，根据运算符生成对应的计算指令
-                if (op == TIMESEQL) GEN(OPR, 0, 4); // 栈顶两元素相乘 (a * b)
-                else if (op == SLASHEQL) GEN(OPR, 0, 5); // 栈顶两元素相除 (a / b)
+                if (op == TIMESEQL) GEN(OPR, 0, 4);
+                else if (op == SLASHEQL) GEN(OPR, 0, 5);
 
-                // 最后，无论哪种赋值，都将栈顶结果存回变量所在地址 (STO)
                 GEN(STO, LEV - TABLE[i].vp.LEVEL, TABLE[i].vp.ADR);
             }
         }
         else {
-            Error(13); // 如果不是赋值运算符，抛出缺失赋值号的错误
+            Error(13);
         }
         break;
     case READSYM:
@@ -562,34 +553,28 @@ void MainWindow::STATEMENT(SYMSET FSYS,int LEV,int &TX) {   /*STATEMENT*/
             GetSym();
         }
         break;
-    case IFSYM:
+    case IFSYM: // ELSE
         GetSym();
         CONDITION(SymSetUnion(SymSetNew(THENSYM,DOSYM),FSYS),LEV,TX);
-        if (SYM==THENSYM) GetSym();
+        if (SYM==THENSYM) GetSym(); //其后？
         else Error(16);
 
-        // 生成条件假时的跳转指令（此时还不知道跳去哪，地址暂时填0，记录指令位置为CX1）
-        CX1=CX;  GEN(JPC,0,0);
+        CX1=CX; //指令位置
+        GEN(JPC,0,0);
 
-        // 解析 THEN 后面的语句。注意这里要把 ELSESYM 加入跟随符号集，防止报错
         STATEMENT(SymSetUnion(SymSetNew(ELSESYM), FSYS), LEV, TX);
 
-        // 判断是否跟着 ELSE
         if (SYM == ELSESYM) {
             GetSym();
-            // THEN 语句执行完后，需要无条件跳转到 ELSE 之后。暂填0，记录位置为 CX2
             CX2=CX;  GEN(JMP,0,0);
 
-            // 此时的 CX (当前代码指针) 就是 ELSE 语句的开始地址，把这个地址回填给前面的 JPC
+            // 根据gen后的CX回填JPC
             CODE[CX1].A=CX;
 
-            // 解析 ELSE 后面的语句
-            STATEMENT(FSYS, LEV, TX);
+            STATEMENT(FSYS, LEV, TX); //else
 
-            // ELSE 语句解析完了，此时的 CX 是整个 IF-ELSE 结束后的第一条指令，把它回填给 JMP
             CODE[CX2].A=CX;
         } else {
-            // 如果没有 ELSE，那么条件为假时就直接跳转到 THEN 语句之后的位置
             CODE[CX1].A=CX;
         }
         break;
@@ -614,51 +599,45 @@ void MainWindow::STATEMENT(SYMSET FSYS,int LEV,int &TX) {   /*STATEMENT*/
         CODE[CX2].A=CX;
         break;
     case FORSYM:
-        GetSym(); // 读入 FOR
+        GetSym();
 
-        // 1. 解析 <变量>
         if (SYM == IDENT) {
             i = POSITION(ID, TX);
-            if (i == 0) Error(11); // 变量未声明
-            else if (TABLE[i].KIND != VARIABLE) Error(12); // 非变量不能被赋值
+            if (i == 0) Error(11);
+            else if (TABLE[i].KIND != VARIABLE) Error(12);
             GetSym();
         } else {
-            Error(14); // 期待标识符
+            Error(14);
             i = 0;
         }
 
-        // 2. 解析 :=
         if (SYM == BECOMES) {
             GetSym();
         } else {
-            Error(13); // 期待 :=
+            Error(13);
         }
 
-        // 3. 解析初值 <表达式>
-        // 把 STEPSYM 加入容错集合，防止表达式解析过头
         EXPRESSION(SymSetUnion(SymSetNew(STEPSYM), FSYS), LEV, TX);
         if (i != 0) GEN(STO, LEV - TABLE[i].vp.LEVEL, TABLE[i].vp.ADR); // i := 初值
 
-        // === 生成跳转指令 ===
-        CX1 = CX; // 记录 JMP 的位置，稍后回填 L_Cond
-        GEN(JMP, 0, 0); // 第一次进循环跳过步长增加，直接去判断条件
+        CX1 = CX; // JMP 的位置
+        GEN(JMP, 0, 0);
 
-        // 4. 解析 STEP <表达式>
-        CX2 = CX; // 记录 L_Step 位置 (每次循环体结束后跳回这里加步长)
+        CX2 = CX; // 步长更新入口 (每次循环体结束后跳回这里加步长)
         if (SYM == STEPSYM) {
             GetSym();
         } else {
-            Error(0); // 缺少 STEP (此处用通用错误替代，或自定义错误码)
+            Error(0);
         }
 
-        if (i != 0) GEN(LOD, LEV - TABLE[i].vp.LEVEL, TABLE[i].vp.ADR); // 将 i 入栈
+        if (i != 0) GEN(LOD, LEV - TABLE[i].vp.LEVEL, TABLE[i].vp.ADR);
         EXPRESSION(SymSetUnion(SymSetNew(UNTILSYM), FSYS), LEV, TX); // 计算步长表达式
-        GEN(OPR, 0, 2); // 栈顶两元素相加 (i + step)
-        if (i != 0) GEN(STO, LEV - TABLE[i].vp.LEVEL, TABLE[i].vp.ADR); // 存回 i: i := i + step
+        GEN(OPR, 0, 2);
+        if (i != 0) GEN(STO, LEV - TABLE[i].vp.LEVEL, TABLE[i].vp.ADR);
 
-        // 5. 解析 UNTIL <表达式>
-        CX3 = CX; // 记录 L_Cond 位置
-        CODE[CX1].A = CX3; // [回填] 把 L_Cond 的地址填给最初的那个 JMP
+
+        CX3 = CX; // JMP
+        CODE[CX1].A = CX3;
 
         if (SYM == UNTILSYM) {
             GetSym();
@@ -666,25 +645,24 @@ void MainWindow::STATEMENT(SYMSET FSYS,int LEV,int &TX) {   /*STATEMENT*/
             Error(0); // 缺少 UNTIL
         }
 
-        if (i != 0) GEN(LOD, LEV - TABLE[i].vp.LEVEL, TABLE[i].vp.ADR); // 将 i 入栈
-        EXPRESSION(SymSetUnion(SymSetNew(DOSYM), FSYS), LEV, TX); // 计算终值表达式
-        GEN(OPR, 0, 13); // 判断: 栈顶变成 (i <= 终值) 的布尔值
+        if (i != 0) GEN(LOD, LEV - TABLE[i].vp.LEVEL, TABLE[i].vp.ADR);
+        EXPRESSION(SymSetUnion(SymSetNew(DOSYM), FSYS), LEV, TX);
+        GEN(OPR, 0, 13);
 
-        CX1 = CX; // 记录 JPC 的位置，稍后回填 L_End
-        GEN(JPC, 0, 0); // 若 i > 终值，条件为假(0)，跳出循环
+        CX1 = CX;
+        GEN(JPC, 0, 0);
 
-        // 6. 解析 DO <语句>
         if (SYM == DOSYM) {
             GetSym();
         } else {
-            Error(18); // 缺少 DO
+            Error(18);
         }
 
         STATEMENT(FSYS, LEV, TX); // 递归解析 DO 里面的循环体语句
 
-        GEN(JMP, 0, CX2); // 循环体执行完，无条件跳回步长计算入口 L_Step
+        GEN(JMP, 0, CX2);
 
-        CODE[CX1].A = CX; // [回填] 此时的 CX 已经跳出了循环，将其回填给跳出循环的 JPC (L_End)
+        CODE[CX1].A = CX; // 回填给跳出循环的 JPC
         break;
     }
     TEST(FSYS,SymSetNULL(),19);

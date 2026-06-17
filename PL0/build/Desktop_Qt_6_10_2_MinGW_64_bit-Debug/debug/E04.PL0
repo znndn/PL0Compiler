@@ -1,0 +1,13 @@
+PROGRAM E04;
+VAR A, B;
+BEGIN
+    A := 5;
+    B := ++A;
+    WRITE(A, B);
+    A++;
+    WRITE(A, B);
+    B := --A;
+    WRITE(A, B);
+    B := A--;
+    WRITE(A, B)
+END.

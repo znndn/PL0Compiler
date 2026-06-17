@@ -1,0 +1,7 @@
+PROGRAM E03;
+VAR I,X;
+BEGIN
+    X := 2;
+    FOR I := 1 STEP X UNTIL 7 DO
+        WRITE(I)
+END.

@@ -1,0 +1,35 @@
+=== COMPILE PL0 ===
+  0 PROGRAM E03; 
+  0 VAR I,X; 
+  1 BEGIN 
+  2     X := 2; 
+  4     FOR I := 1 STEP X UNTIL 7 DO 
+ 15         WRITE(I) 
+ 17 END. 
+  0 JMP 0 1
+  1 INI 0 5
+  2 LIT 0 2
+  3 STO 0 4
+  4 LIT 0 1
+  5 STO 0 3
+  6 JMP 0 11
+  7 LOD 0 3
+  8 LOD 0 4
+  9 OPR 0 2
+ 10 STO 0 3
+ 11 LOD 0 3
+ 12 LIT 0 7
+ 13 OPR 0 13
+ 14 JPC 0 19
+ 15 LOD 0 3
+ 16 OPR 0 14
+ 17 OPR 0 15
+ 18 JMP 0 7
+ 19 OPR 0 0
+~~~ RUN PL0 ~~~
+1
+3
+5
+7
+~~~ END PL0 ~~~
+
